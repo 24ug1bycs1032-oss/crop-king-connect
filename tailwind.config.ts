@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        display: ['Poppins', 'sans-serif'],
+        body: ['Nunito', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -46,6 +50,22 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        harvest: {
+          DEFAULT: "hsl(var(--harvest))",
+          foreground: "hsl(var(--harvest-foreground))",
+        },
+        earth: {
+          DEFAULT: "hsl(var(--earth))",
+          foreground: "hsl(var(--earth-foreground))",
+        },
+        sky: {
+          DEFAULT: "hsl(var(--sky))",
+          foreground: "hsl(var(--sky-foreground))",
+        },
+        growth: {
+          DEFAULT: "hsl(var(--growth))",
+          foreground: "hsl(var(--growth-foreground))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
