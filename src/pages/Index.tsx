@@ -37,6 +37,11 @@ const Index = () => {
   const trend = getMockTrend();
   const sellDecision = getSellDecision(trend);
 
+  const chatContext = `Region: ${region}, Crop: ${crop}, Season: ${season}. 
+Market prices: ${prices.map(p => `${p.market}: ₹${p.price}/${p.unit}`).join(", ")}. 
+Top buyer offers: ${buyers.slice(0, 2).map(b => `${b.name} offers ₹${b.offeredPrice.toLocaleString("en-IN")} per acre`).join(", ")}.
+Sell recommendation: ${sellDecision.decision} - ${sellDecision.reason}`;
+
   return (
     <div className="min-h-screen p-4 md:p-6 max-w-6xl mx-auto">
       <DashboardHeader
@@ -54,6 +59,8 @@ const Index = () => {
         <BuyerMarketplace buyers={buyers} crop={crop} />
         <StockCalculator prices={prices} buyers={buyers} />
       </div>
+
+      <ChatBot context={chatContext} language={selection.language} />
     </div>
   );
 };
