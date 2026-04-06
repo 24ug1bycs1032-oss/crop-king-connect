@@ -7,6 +7,7 @@ import TrendChart from "@/components/dashboard/TrendChart";
 import SellDecisionCard from "@/components/dashboard/SellDecisionCard";
 import BuyerMarketplace from "@/components/dashboard/BuyerMarketplace";
 import StockCalculator from "@/components/dashboard/StockCalculator";
+import ChatBot from "@/components/ChatBot";
 import {
   getMockPrices,
   getMockBuyers,
