@@ -60,7 +60,7 @@ Sell recommendation: ${sellDecision.decision} - ${sellDecision.reason}`;
         <StockCalculator prices={prices} buyers={buyers} />
       </div>
 
-      <ChatBot context={chatContext} language={selection.language} />
+      <ChatBot context={chatContext} language={selection.language} crop={crop} />
     </div>
   );
 };

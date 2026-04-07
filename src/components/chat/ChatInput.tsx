@@ -18,7 +18,7 @@ const langSpeechMap: Record<string, string> = {
 const ChatInput = ({ onSend, loading, language }: Props) => {
   const [input, setInput] = useState("");
   const [listening, setListening] = useState(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<any>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const speechSupported = typeof window !== "undefined" && ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
