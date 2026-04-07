@@ -1,9 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Send, X, Bot, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import ReactMarkdown from "react-markdown";
+import { MessageCircle, X, Bot, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import ChatMessage from "./chat/ChatMessage";
+import ChatInput from "./chat/ChatInput";
+import SuggestedQuestions from "./chat/SuggestedQuestions";
+import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
 
 interface Message {
   role: "user" | "assistant";
@@ -13,37 +15,35 @@ interface Message {
 interface Props {
   context: string;
   language: string;
+  crop: string;
 }
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/farm-chat`;
 
-const ChatBot = ({ context, language }: Props) => {
+const ChatBot = ({ context, language, crop }: Props) => {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { speak, stop, isSpeaking } = useSpeechSynthesis(language);
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
     }
   }, [messages]);
 
-  const send = async () => {
-    const text = input.trim();
-    if (!text || loading) return;
+  const send = useCallback(async (text: string) => {
+    if (!text.trim() || loading) return;
 
     const userMsg: Message = { role: "user", content: text };
     const allMessages = [...messages, userMsg];
 
-    // Prepend context as first user message if it's the first message
     const apiMessages = messages.length === 0
       ? [{ role: "user" as const, content: `Context about my farm:\n${context}` }, userMsg]
       : [...messages, userMsg];
 
     setMessages(allMessages);
-    setInput("");
     setLoading(true);
 
     try {
@@ -95,7 +95,7 @@ const ChatBot = ({ context, language }: Props) => {
               });
             }
           } catch {
-            // partial JSON, ignore
+            // partial JSON
           }
         }
       }
@@ -104,108 +104,114 @@ const ChatBot = ({ context, language }: Props) => {
       toast.error("Connection error. Please try again.");
     }
     setLoading(false);
+  }, [messages, loading, context, language]);
+
+  const handleSpeak = (text: string) => {
+    if (isSpeaking) {
+      stop();
+    } else {
+      speak(text);
+    }
   };
 
   return (
     <>
       {/* FAB */}
-      <motion.button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full gradient-primary flex items-center justify-center shadow-elevated"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <MessageCircle className="w-6 h-6 text-primary-foreground" />
-      </motion.button>
+      <AnimatePresence>
+        {!open && (
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            onClick={() => setOpen(true)}
+            className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full gradient-primary flex items-center justify-center shadow-elevated hover:shadow-lg transition-shadow"
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <MessageCircle className="w-6 h-6 text-primary-foreground" />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
-      {/* Chat Panel */}
+      {/* Full Chat Panel */}
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            initial={{ opacity: 0, y: 20, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 40, scale: 0.95 }}
-            className="fixed bottom-24 right-4 z-50 w-[360px] max-h-[520px] bg-card rounded-xl shadow-elevated border border-border flex flex-col overflow-hidden"
+            exit={{ opacity: 0, y: 20, scale: 0.97 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="fixed inset-4 md:inset-auto md:bottom-6 md:right-6 md:w-[440px] md:h-[600px] z-50 bg-background rounded-2xl shadow-elevated border border-border flex flex-col overflow-hidden"
           >
             {/* Header */}
-            <div className="gradient-primary p-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Bot className="w-5 h-5 text-primary-foreground" />
-                <span className="font-bold text-primary-foreground font-display">KrishiMitra AI</span>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-card">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-display font-bold text-sm text-foreground">KrishiMitra AI</h3>
+                  <p className="text-xs text-muted-foreground">Your farming assistant</p>
+                </div>
               </div>
-              <button onClick={() => setOpen(false)}>
-                <X className="w-5 h-5 text-primary-foreground/80 hover:text-primary-foreground" />
+              <button
+                onClick={() => { setOpen(false); stop(); }}
+                className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Messages */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[300px]">
+            <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
               {messages.length === 0 && (
-                <div className="text-center text-muted-foreground text-sm py-8">
-                  <Bot className="w-10 h-10 mx-auto mb-2 text-primary/40" />
-                  <p>Ask me anything about your crops, prices, or farming advice! 🌾</p>
+                <div className="flex flex-col items-center justify-center h-full gap-6">
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="flex flex-col items-center gap-3"
+                  >
+                    <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center">
+                      <Bot className="w-8 h-8 text-primary-foreground" />
+                    </div>
+                    <h2 className="font-display font-bold text-lg text-foreground text-center">
+                      How can I help you today?
+                    </h2>
+                    <p className="text-sm text-muted-foreground text-center max-w-[280px]">
+                      Ask me anything about your crops, market prices, or farming advice 🌾
+                    </p>
+                  </motion.div>
+                  <SuggestedQuestions onSelect={send} crop={crop} />
                 </div>
               )}
+
               {messages.map((m, i) => (
-                <div key={i} className={`flex gap-2 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                  {m.role === "assistant" && (
-                    <div className="w-7 h-7 rounded-full gradient-primary flex items-center justify-center flex-shrink-0 mt-1">
-                      <Bot className="w-4 h-4 text-primary-foreground" />
-                    </div>
-                  )}
-                  <div className={`max-w-[80%] p-3 rounded-xl text-sm ${
-                    m.role === "user"
-                      ? "bg-primary text-primary-foreground rounded-br-sm"
-                      : "bg-muted text-foreground rounded-bl-sm"
-                  }`}>
-                    {m.role === "assistant" ? (
-                      <div className="prose prose-sm max-w-none [&_p]:m-0 [&_ul]:my-1 [&_li]:my-0">
-                        <ReactMarkdown>{m.content}</ReactMarkdown>
-                      </div>
-                    ) : (
-                      m.content
-                    )}
-                  </div>
-                  {m.role === "user" && (
-                    <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 mt-1">
-                      <User className="w-4 h-4 text-secondary-foreground" />
-                    </div>
-                  )}
-                </div>
+                <ChatMessage
+                  key={i}
+                  role={m.role}
+                  content={m.content}
+                  onSpeak={m.role === "assistant" ? handleSpeak : undefined}
+                  isSpeaking={isSpeaking}
+                />
               ))}
+
               {loading && messages[messages.length - 1]?.role !== "assistant" && (
-                <div className="flex gap-2">
-                  <div className="w-7 h-7 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
                     <Bot className="w-4 h-4 text-primary-foreground" />
                   </div>
-                  <div className="bg-muted p-3 rounded-xl rounded-bl-sm">
-                    <div className="flex gap-1">
-                      <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                      <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                    </div>
+                  <div className="flex gap-1.5 py-3">
+                    <span className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                   </div>
                 </div>
               )}
             </div>
 
             {/* Input */}
-            <div className="p-3 border-t border-border flex gap-2">
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && send()}
-                placeholder="Ask about your crops..."
-                className="flex-1 p-2 rounded-lg border border-border bg-background text-foreground text-sm outline-none focus:ring-2 focus:ring-ring"
-              />
-              <Button
-                onClick={send}
-                disabled={!input.trim() || loading}
-                size="sm"
-                className="gradient-primary text-primary-foreground"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
+            <div className="px-4 pb-4 pt-2">
+              <ChatInput onSend={send} loading={loading} language={language} />
             </div>
           </motion.div>
         )}
