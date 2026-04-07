@@ -27,10 +27,10 @@ interface Selection {
 const container = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.15 } },
-};
+} as const;
 const card = {
   hidden: { opacity: 0, y: 24, scale: 0.97 },
-  show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", damping: 20, stiffness: 260 } },
+  show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring" as const, damping: 20, stiffness: 260 } },
 };
 
 const Index = () => {
