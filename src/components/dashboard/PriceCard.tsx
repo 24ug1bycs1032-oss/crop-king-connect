@@ -9,18 +9,20 @@ interface Props {
 
 const PriceCard = ({ prices, crop }: Props) => {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-card rounded-xl shadow-card p-6"
-    >
+    <div className="bg-card rounded-2xl shadow-card p-6 border border-border hover:shadow-elevated transition-shadow duration-300">
       <h2 className="text-xl font-bold font-display text-foreground flex items-center gap-2 mb-4">
         <IndianRupee className="w-5 h-5 text-primary" />
         {crop} Market Prices
       </h2>
       <div className="space-y-3">
         {prices.map((p, i) => (
-          <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted">
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.08 }}
+            className="flex items-center justify-between p-3 rounded-xl bg-muted hover:bg-muted/80 transition-colors"
+          >
             <div>
               <p className="font-semibold text-foreground">{p.market}</p>
               <p className="text-sm text-muted-foreground">
@@ -32,10 +34,10 @@ const PriceCard = ({ prices, crop }: Props) => {
               <p className="text-2xl font-bold text-primary">₹{p.price}</p>
               <p className="text-xs text-muted-foreground">{p.unit}</p>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
-    </motion.div>
+    </div>
   );
 };
 

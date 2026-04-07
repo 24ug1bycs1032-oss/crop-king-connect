@@ -8,6 +8,7 @@ import SellDecisionCard from "@/components/dashboard/SellDecisionCard";
 import BuyerMarketplace from "@/components/dashboard/BuyerMarketplace";
 import StockCalculator from "@/components/dashboard/StockCalculator";
 import ChatBot from "@/components/ChatBot";
+import { motion } from "framer-motion";
 import {
   getMockPrices,
   getMockBuyers,
@@ -22,6 +23,15 @@ interface Selection {
   season: string;
   language: string;
 }
+
+const container = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.15 } },
+} as const;
+const card = {
+  hidden: { opacity: 0, y: 24, scale: 0.97 },
+  show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring" as const, damping: 20, stiffness: 260 } },
+};
 
 const Index = () => {
   const [selection, setSelection] = useState<Selection | null>(null);
@@ -51,14 +61,19 @@ Sell recommendation: ${sellDecision.decision} - ${sellDecision.reason}`;
         onBack={() => setSelection(null)}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <PriceCard prices={prices} crop={crop} />
-        <RecommendationCard recommendations={recommendations} season={season} />
-        <TrendChart data={trend} crop={crop} />
-        <SellDecisionCard decision={sellDecision.decision} reason={sellDecision.reason} />
-        <BuyerMarketplace buyers={buyers} crop={crop} />
-        <StockCalculator prices={prices} buyers={buyers} />
-      </div>
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+      >
+        <motion.div variants={card}><PriceCard prices={prices} crop={crop} /></motion.div>
+        <motion.div variants={card}><RecommendationCard recommendations={recommendations} season={season} /></motion.div>
+        <motion.div variants={card}><TrendChart data={trend} crop={crop} /></motion.div>
+        <motion.div variants={card}><SellDecisionCard decision={sellDecision.decision} reason={sellDecision.reason} /></motion.div>
+        <motion.div variants={card}><BuyerMarketplace buyers={buyers} crop={crop} /></motion.div>
+        <motion.div variants={card}><StockCalculator prices={prices} buyers={buyers} /></motion.div>
+      </motion.div>
 
       <ChatBot context={chatContext} language={selection.language} crop={crop} />
     </div>
