@@ -9,8 +9,7 @@ interface Props {
 }
 
 const TrendChart = ({ data, crop }: Props) => (
-  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-    className="bg-card rounded-xl shadow-card p-6">
+  <div className="bg-card rounded-2xl shadow-card p-6 border border-border hover:shadow-elevated transition-shadow duration-300">
     <h2 className="text-xl font-bold font-display text-foreground flex items-center gap-2 mb-4">
       <BarChart3 className="w-5 h-5 text-sky" />
       {crop} Price Trend (12 Months)
@@ -25,7 +24,7 @@ const TrendChart = ({ data, crop }: Props) => (
             contentStyle={{
               backgroundColor: "hsl(40 30% 99%)",
               border: "1px solid hsl(40 20% 88%)",
-              borderRadius: "8px",
+              borderRadius: "12px",
               fontFamily: "Nunito",
             }}
             formatter={(value: number) => [`₹${value}`, "Price"]}
@@ -41,10 +40,10 @@ const TrendChart = ({ data, crop }: Props) => (
         </LineChart>
       </ResponsiveContainer>
     </div>
-    <p className="text-sm text-muted-foreground mt-2">
+    <p className="text-sm text-muted-foreground mt-3">
       📈 Prices have been <span className="font-bold text-primary">gradually increasing</span> over the past year due to rising demand.
     </p>
-  </motion.div>
+  </div>
 );
 
 export default TrendChart;
